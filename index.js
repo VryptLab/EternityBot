@@ -9,6 +9,28 @@ import makeWASocket, {
 import { Boom } from '@hapi/boom'
 import fs from 'fs'
 import pino from 'pino'
+import cfonts from 'cfonts';
+
+const text = 'EternityBot';
+const output = cfonts.render(text, {
+  font: 'tiny',
+  align: 'left',
+  colors: ['yellow'],
+  background: 'transparent',
+  letterSpacing: 1,
+  lineHeight: 1,
+  space: true
+});
+
+const terminalWidth = process.stdout.columns;
+const lines = output.string.split('\n');
+
+const centered = lines.map(line => {
+  const padding = Math.max(0, Math.floor((terminalWidth - line.length) / 2));
+  return ' '.repeat(padding) + line;
+}).join('\n');
+
+console.log(centered);
 
 import serialize, { Client } from '#lib/serialize.js'
 import log from '#lib/logger.js'
