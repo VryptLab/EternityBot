@@ -35,9 +35,37 @@ After running the bot, scan the QR code with your WhatsApp mobile app to connect
 Edit `config.js` file in the root directory:
 
 ```javascript
-BOT_NAME=EternityBot
-PREFIX=!
-OWNER_NUMBER=62xxxxxxxxxx
+// Pairing number (for QR scan/Pairing code)
+global.PAIRING_NUMBER = 6285760188757
+
+// Main owner number + backup
+global.ownerNumber = [
+  '6287701656619',
+  '6287782304364'
+]
+
+// Bot mode: 
+// false = self mode (only owner)
+// true  = public mode (all users)
+global.pubelik = true
+
+// Default messages for bot responses
+global.mess = {
+  wait: 'Please wait a moment...',
+  owner: 'This feature can only be used by the Owner.',
+  group: 'This feature can only be used in Groups.',
+  admin: 'This feature can only be used by Group Admins.',
+  botAdmin: 'Bot must be an Admin first.',
+  private: 'This feature can only be used in private chat.'
+}
+
+// Default watermark for stickers
+global.stickpack = 'Created By'
+global.stickauth = 'ESEMPE-MD'
+
+global.title = "ESEMPE-MD"
+global.body = "Apcb"
+global.thumbnailUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaK3_60MiEWpItg8BbrvcF4Be_vgIDd8Ggj13AYkPqGdUosLSmCMCtGSY&s=10"
 ```
 
 ## Contributing
