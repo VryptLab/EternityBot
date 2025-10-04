@@ -36,12 +36,12 @@ Edit `config.js` file in the root directory:
 
 ```javascript
 // Pairing number (for QR scan/Pairing code)
-global.PAIRING_NUMBER = 6285760188757
+global.PAIRING_NUMBER = 62882003353414
 
 // Main owner number + backup
 global.ownerNumber = [
-  '6287701656619',
-  '6287782304364'
+  '62882005514880',
+  '62882003353414'
 ]
 
 // Bot mode: 
@@ -61,11 +61,17 @@ global.mess = {
 
 // Default watermark for stickers
 global.stickpack = 'Created By'
-global.stickauth = 'ESEMPE-MD'
+global.stickauth = 'EternityBot'
 
-global.title = "ESEMPE-MD"
-global.body = "Apcb"
-global.thumbnailUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaK3_60MiEWpItg8BbrvcF4Be_vgIDd8Ggj13AYkPqGdUosLSmCMCtGSY&s=10"
+global.copyright = "© 2025 - VryptLabs"
+
+global.title = "EternityBot"
+global.body = "A lightweight and efficient WhatsApp bot built with Node.js and Baileys."
+global.source = "https://github.com/VryptLab/EternityBot"
+global.newsletter = "120363404886887749@newsletter"
+global.thumbnail = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/banner.png"
+global.logo = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/logo.png"
+global.icon = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/black-logo.png"
 ```
 
 ## Contributing
