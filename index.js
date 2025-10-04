@@ -35,7 +35,7 @@ const centered = lines
 
 console.log(centered);
 
-import serialize, { Client } from '#lib/serialize.js';
+import { Client, serialize } from '#lib/serialize/index.js';
 import log from '#lib/logger.js';
 import printMessage from '#lib/printChatLog.js';
 import PluginsLoad from '#lib/loadPlugins.js';
