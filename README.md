@@ -1,10 +1,10 @@
-# EternityBot
-
 ![Banner](https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/banner.png)
 
 ![Node.js](https://img.shields.io/badge/Node.js-v20%2B-brightgreen?logo=nodedotjs)
 ![License](https://img.shields.io/github/license/VryptLab/EternityBot)
 ![Stars](https://img.shields.io/github/stars/VryptLab/EternityBot?style=social)
+
+# EternityBot
 
 A lightweight and efficient WhatsApp bot built with Node.js and Baileys.
 
