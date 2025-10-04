@@ -1,6 +1,6 @@
 # ESEMPE-MD
 
-![ESEMPE-MD Banner](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaK3_60MiEWpItg8BbrvcF4Be_vgIDd8Ggj13AYkPqGdUosLSmCMCtGSY&s=10)
+![ESEMPE-MD Banner](https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/banner.png)
 
 ESEMPE-MD adalah bot WhatsApp Multi-Device yang sederhana dan ringan.
 
