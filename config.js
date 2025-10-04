@@ -33,6 +33,7 @@ global.logo = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/mai
 global.icon = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/black-logo.png"
 
 global.mess = {
+  gagal: 'Gagal, harap lapor owner!',
   wait: 'Harap tunggu sebentar...',
   owner: 'Fitur ini hanya bisa digunakan oleh Owner.',
   group: 'Fitur ini hanya bisa digunakan dalam Group.',
