@@ -6,28 +6,46 @@ import cp from 'child_process'
 import Api from '#lib/api.js'
 import Func from '#lib/function.js'
 
-export default async function Command(conn, m) {
-  const quoted = m.isQuoted ? m.quoted : m
-  const downloadM = async (filename) => await conn.downloadMediaMessage(quoted, filename)
-  const isCommand = (m.prefix && m.body.startsWith(m.prefix)) || false
-  const isOwner = m.fromMe || ownerNumber.includes(m.sender.split('@')[0])
+const exec = util.promisify(cp.exec).bind(cp)
 
+export default async function Command(conn, m) {
   if (m.isBot) return
+  
+  const isOwner = m.fromMe || ownerNumber.includes(m.sender.split('@')[0])
   if (!pubelik && !isOwner) return
 
-  const metadata = m.isGroup ? conn.chats[m.chat] || (await conn.groupMetadata(m.chat).catch(() => null)) : {}
-  const isAdmin = m.isGroup && metadata.participants.find(u => conn.getJid(u.id) === m.sender)?.admin == 'admin' || false;
-  const isBotAdmin = m.isGroup && metadata.participants.find(u => conn.getJid(u.id) === jidNormalizedUser(conn.user.id))?.admin == 'admin' || false;
+  const quoted = m.isQuoted ? m.quoted : m
+  const isCommand = (m.prefix && m.body.startsWith(m.prefix)) || false
+
+  if (isOwner && ['>', '=>'].some(a => m.body?.toLowerCase().startsWith(a))) {
+    return handleEval(m)
+  }
+
+  if (isOwner && m.body?.startsWith('$')) {
+    return handleExec(m)
+  }
+
+  let metadata, isAdmin, isBotAdmin
+  const loadGroupData = async () => {
+    if (!metadata && m.isGroup) {
+      metadata = conn.chats[m.chat] || await conn.groupMetadata(m.chat).catch(() => ({}))
+      const botJid = jidNormalizedUser(conn.user.id)
+      const userParticipant = metadata.participants?.find(u => conn.getJid(u.id) === m.sender)
+      const botParticipant = metadata.participants?.find(u => conn.getJid(u.id) === botJid)
+      isAdmin = userParticipant?.admin === 'admin'
+      isBotAdmin = botParticipant?.admin === 'admin'
+    }
+  }
 
   const ctx = {
     Api,
     Func,
-    downloadM,
+    downloadM: async (filename) => await conn.downloadMediaMessage(quoted, filename),
     quoted,
-    metadata,
-    isOwner,
-    isAdmin,
-    isBotAdmin
+    get metadata() { return metadata },
+    get isAdmin() { return isAdmin },
+    get isBotAdmin() { return isBotAdmin },
+    isOwner
   }
 
   for (const plugin of Object.values(plugins)) {
@@ -42,75 +60,71 @@ export default async function Command(conn, m) {
 
     if (isCommand) {
       const command = m.command?.toLowerCase()
-      const isCmd =
-        plugin?.command?.includes(command) ||
-        (plugin?.alias && plugin.alias.includes(command))
+      const isCmd = plugin?.command?.includes(command) || 
+                    plugin?.alias?.includes(command)
+
+      if (!isCmd) continue
 
       try {
-        if (isCmd) {
-          if (plugin.settings?.owner && !isOwner) {
-            m.reply(mess.owner)
-            continue
-          }
-          if (plugin.settings?.private && m.isGroup) {
-            m.reply(mess.private)
-            continue
-          }
-          if (plugin.settings?.group && !m.isGroup) {
-            m.reply(mess.group)
-            continue
-          }
-          if (plugin.settings?.admin && !isAdmin) {
-            m.reply(mess.admin)
-            continue
-          }
-          if (plugin.settings?.botAdmin && !isBotAdmin) {
-            m.reply(mess.botAdmin)
-            continue
-          }
-          if (plugin.settings?.loading) m.reply(mess.wait)
-
-          plugin.run(conn, m, ctx)
+        if (plugin.settings?.owner && !isOwner) {
+          return m.reply(mess.owner)
         }
+        if (plugin.settings?.private && m.isGroup) {
+          return m.reply(mess.private)
+        }
+        if (plugin.settings?.group && !m.isGroup) {
+          return m.reply(mess.group)
+        }
+        
+        if (plugin.settings?.admin || plugin.settings?.botAdmin) {
+          await loadGroupData()
+          
+          if (plugin.settings.admin && !isAdmin) {
+            return m.reply(mess.admin)
+          }
+          if (plugin.settings.botAdmin && !isBotAdmin) {
+            return m.reply(mess.botAdmin)
+          }
+        }
+
+        if (plugin.settings?.loading) m.reply(mess.wait)
+        await plugin.run(conn, m, ctx)
+        return
       } catch (e) {
         console.error(`[PLUGIN ERROR] ${plugin.name}`, e)
-        await m.reply('Terjadi error saat menjalankan command.')
+        return m.reply('Terjadi error saat menjalankan command.')
       }
     }
   }
+}
 
-  if (['>', '=>'].some((a) => m.body?.toLowerCase().startsWith(a)) && isOwner) {
-    let evalCmd = ''
-    try {
-      evalCmd = /await/i.test(m.text)
-        ? eval(`(async() => { ${m.text} })()`)
-        : eval(m.text)
-    } catch (e) {
-      evalCmd = e
-    }
-
-    new Promise((resolve, reject) => {
-      try {
-        resolve(evalCmd)
-      } catch (err) {
-        reject(err)
-      }
-    })
-      ?.then((res) => m.reply(util.format(res)))
-      ?.catch((err) => m.reply(util.format(err)))
+async function handleEval(m) {
+  let evalCmd
+  try {
+    evalCmd = /await/i.test(m.text)
+      ? eval(`(async() => { ${m.text} })()`)
+      : eval(m.text)
+  } catch (e) {
+    evalCmd = e
   }
 
-  if (m.body?.startsWith('$') && isOwner) {
-    const exec = util.promisify(cp.exec).bind(cp)
-    let o
-    try {
-      o = await exec(m.text)
-    } catch (e) {
-      o = e
-    } finally {
-      const { stdout, stderr } = o
-      if (stdout.trim()) m.reply(stdout)
-      if (stderr.trim()) m.reply(stderr)
-    }
+  try {
+    const res = await Promise.resolve(evalCmd)
+    m.reply(util.format(res))
+  } catch (err) {
+    m.reply(util.format(err))
   }
+}
+
+async function handleExec(m) {
+  let o
+  try {
+    o = await exec(m.text)
+  } catch (e) {
+    o = e
+  }
+  
+  const { stdout = '', stderr = '' } = o || {}
+  if (stdout.trim()) m.reply(stdout)
+  if (stderr.trim()) m.reply(stderr)
 }
