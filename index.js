@@ -1,3 +1,4 @@
+console.clear()
 import('./config.js')
 
 import makeWASocket, {
