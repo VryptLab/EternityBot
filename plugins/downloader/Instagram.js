@@ -1,4 +1,4 @@
-import igdl from '#scrape/Instagram.js';
+import { instagram } from '#scrape';
 
 export default {
     name: "instagram",
@@ -19,7 +19,7 @@ export default {
                 );
             }
 
-            const res = await igdl(parseUrl)
+            const res = await instagram(parseUrl)
 
             if (res.error) return m.reply("Gagal ambil konten dari Instagram~");
 

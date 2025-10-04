@@ -1,4 +1,4 @@
-import deepseek from '#scrape/deepseek.js';
+import { deepseek } from '#scrape';
 
 export default {
     name: "deepseek",

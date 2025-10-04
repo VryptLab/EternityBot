@@ -1,4 +1,4 @@
-import gpt from '#scrape/chatgpt.js';
+import { chatgpt } from '#scrape';
 
 export default {
     name: "chatgpt",

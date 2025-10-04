@@ -19,7 +19,7 @@
   },
   "imports": {
     "#lib/*": "./lib/*",
-    "#scrape/*": "./lib/scrape/*"
+    "#scrape": "./lib/scrape/index.js"
   },
   "keywords": [
     "whatsapp-bot",

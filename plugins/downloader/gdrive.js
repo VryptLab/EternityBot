@@ -1,4 +1,4 @@
-import gdrive from "#scrape/gdrive.js";
+import { gdrive } from "#scrape";
 import axios from "axios";
 
 export default {
