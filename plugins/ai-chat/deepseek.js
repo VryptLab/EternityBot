@@ -5,7 +5,7 @@ export default {
     category: "ai-chat",
     command: ["deepseek", "dipsek"],
     run: async (conn, m) => {
-        const input = m.isQuoted ? m.quoted.text : input;
+        const input = m.isQuoted ? m.quoted.text : m.text;
         if (!input) return m.reply(`Masukkan pertanyaan atau perintah!\n\nContoh:\n${m.cmd} apa itu AI`);
 
         if (!conn.deepseek) conn.deepseek = {};
