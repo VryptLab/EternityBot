@@ -1,94 +1,70 @@
-# ESEMPE-MD
+# EternityBot
 
-![ESEMPE-MD Banner](https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/banner.png)
+![Banner](https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/banner.png)
 
-ESEMPE-MD adalah bot WhatsApp Multi-Device yang sederhana dan ringan.
+![Node.js](https://img.shields.io/badge/Node.js-v20%2B-brightgreen?logo=nodedotjs)
+![License](https://img.shields.io/github/license/VryptLab/EternityBot)
+![Stars](https://img.shields.io/github/stars/VryptLab/EternityBot?style=social)
 
----
-
-## Ringkasan singkat
-- Bahasa: JavaScript / Node.js
-- Fokus: stabilitas dan kemudahan penggunaan
+A lightweight and efficient WhatsApp bot built with Node.js and Baileys.
 
 ---
 
-## Persyaratan
-- Node.js v20+
-- npm atau yarn
-- Koneksi internet untuk autentikasi
+## Requirements
+
+- Node.js v20 or higher
+- npm or yarn
 
 ---
 
-## Instalasi & Menjalankan
-1. Clone repository
-   ```bash
-   git clone https://github.com/AgusXzz/ESEMPE-MD
-   cd ESEMPE-MD
-   ```
+## Installation
 
-2. Install dependensi
-   ```bash
-   npm install
-   # atau
-   yarn
-   ```
-
-3. Jalankan bot
-   ```bash
-   npm start
-   ```
-
-4. Masukkan Code Pairing
-   - Pada jalankan pertama, Pairing Code akan muncul di terminal. Masukkan di WhatsApp untuk autentikasi.
-
----
-
-## Struktur direktori (contoh)
-```
-ESEMPE-MD/
-├── lib
-│ ├── api.js
-│ ├── color.js
-│ ├── exif.js
-│ ├── function.js
-│ ├── loadPlugins.js
-│ └── serialize.js
-├── plugins
-│ ├── downloader
-│ ├── tools
-│ └── utility
-├── config.js
-├── handler.js
-├── index.js
-├── package.json
+```bash
+git clone https://github.com/VryptLab/EternityBot.git
+cd EternityBot
+npm install
+npm start
 ```
 
----
-
-## Kontribusi
-Kontribusi kecil diterima (bugfix, perbaikan dokumentasi, penambahan perintah minimal). Langkah:
-1. Fork repository
-2. Buat branch: git checkout -b feat/nama-fitur
-3. Commit & push
-4. Buka Pull Request
-
-Untuk perubahan fitur besar, buka issue dulu supaya dibahas.
+After running the bot, scan the QR code with your WhatsApp mobile app to connect.
 
 ---
 
-## Kontak
-Owner / Maintainer: AgusXzz  
-Repo: https://github.com/AgusXzz/ESEMPE-MD
+## Configuration
 
-## Thanks To
-[![Dika Ardnt](https://github.com/DikaArdnt.png?size=100)](https://github.com/DikaArdnt)
-[![WhiskeySockets](https://github.com/WhiskeySockets.png?size=100)](https://github.com/WhiskeySockets/Baileys)
+Edit `config.js` file in the root directory:
 
-## Contributor
-[![Agus](https://github.com/AgusXzz.png?size=100)](https://github.com/AgusXzz)
-[![Senn](https://github.com/purrbits.png?size=100)](https://github.com/purrbits)
-[![Vcepirit😂](https://github.com/vryptt.png?size=100)](https://github.com/vryptt)
+```javascript
+BOT_NAME=EternityBot
+PREFIX=!
+OWNER_NUMBER=62xxxxxxxxxx
+```
+
+## Contributing
+
+Contributions are welcome. Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/name`)
+3. Commit your changes (`git commit -m 'Add feature'`)
+4. Push to the branch (`git push origin feature/name`)
+5. Open a Pull Request
+
+For major changes, please open an issue first to discuss what you would like to change.
 
 ---
-Terima kasih sudah menggunakan ESEMPE-MD!
-# CROTED BY EY AY
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Acknowledgments
+- [Agos ygy](https://github.com/AgusXzz) - Code base
+- [Dika Ardnt](https://github.com/DikaArdnt) - Original work
+- [WhiskeySockets/Baileys](https://github.com/WhiskeySockets/Baileys) - WhatsApp Web API
+
+---
+
+© 2025 VryptLabs
