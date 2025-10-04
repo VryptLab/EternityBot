@@ -12,7 +12,6 @@
 !.yarn/plugins
 !.yarn/sdks
 !.yarn/versions
-.yarnrc.yml
 
 # Logs
 logs
