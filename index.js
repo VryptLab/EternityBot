@@ -5,9 +5,11 @@ import makeWASocket, {
   Browsers,
   DisconnectReason,
   useMultiFileAuthState,
-  makeCacheableSignalKeyStore
+  makeCacheableSignalKeyStore,
+  fetchLatestBaileysVersion,
 } from 'baileys'
 import { Boom } from '@hapi/boom'
+import NodeCache from '@cacheable/node-cache'
 import fs from 'fs'
 import pino from 'pino'
 import cfonts from 'cfonts';
@@ -42,9 +44,12 @@ const loader = new PluginsLoad('./plugins', { debug: true })
 await loader.load()
 global.plugins = loader.plugins
 
+const msgRetryCounterCache = new NodeCache()
+
 async function startWA() {
   const { state, saveCreds } = await useMultiFileAuthState('sessions')
-
+  const { version, isLatest } = await fetchLatestBaileysVersion()
+  log.info(`using WA v${version.join('.')}, isLatest: ${isLatest}`)
   const conn = makeWASocket({
     auth: {
       creds: state.creds,
@@ -56,7 +61,14 @@ async function startWA() {
     logger: pino({ level: 'silent' }),
     browser: Browsers.ubuntu('Edge'),
     markOnlineOnConnect: false,
-    generateHighQualityLinkPreview: true
+    generateHighQualityLinkPreview: true,
+    connectTimeoutMs: 60_000,
+    keepAliveIntervalMs: 5000,
+    countryCode: "ID",
+    maxMsgRetryCount: 3,
+    retryRequestDelayMs: 3000,
+    msgRetryCounterCache,
+    version
   })
 
   await Client(conn)
