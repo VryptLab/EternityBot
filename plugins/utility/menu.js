@@ -60,7 +60,7 @@ through WhatsApp.
     let menu = header + body + footer
     conn.sendMessage(m.chat, {
       document: {
-        url: 'https://wa.me'
+        url: icon
       },
       mimetype: "application/pdf",
       pageCount: 2025,
