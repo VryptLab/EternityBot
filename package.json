@@ -1,16 +1,16 @@
 {
-  "name": "esempe-md",
+  "name": "EternityBot",
   "version": "2.0.0",
-  "description": "Lightweight WhatsApp Multi-Device bot built with Baileys.",
-  "license": "ISC",
-  "author": "AgusXzz",
-  "homepage": "https://github.com/AgusXzz/ESEMPE-MD#readme",
+  "description": "A lightweight and efficient WhatsApp bot built with Node.js and Baileys.",
+  "license": "MIT",
+  "author": "VryptLabs",
+  "homepage": "https://github.com/VryptLab/EternityBot#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AgusXzz/ESEMPE-MD.git"
+    "url": "git+https://github.com/VryptLab/EternityBot.git"
   },
   "bugs": {
-    "url": "https://github.com/AgusXzz/ESEMPE-MD/issues"
+    "url": "https://github.com/VryptLab/EternityBot/issues"
   },
   "type": "module",
   "main": "index.js",
