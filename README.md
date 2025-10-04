@@ -9,12 +9,14 @@
 A lightweight and efficient WhatsApp bot built with Node.js and Baileys.
 
 ---
-
 ## Requirements
 
 - Node.js v20 or higher
 - npm or yarn
-
+- Operating System: Windows 10/11, macOS 12+, or Linux (Ubuntu 20.04+ recommended)
+- RAM: Minimum 2GB (4GB+ recommended)
+- Disk Space: Minimum 500MB free
+- Internet connection for package installation and updates
 ---
 
 ## Installation
