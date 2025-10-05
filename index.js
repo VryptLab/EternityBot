@@ -190,6 +190,7 @@ async function startWA() {
   conn.chats ??= {};
 
   if (!conn.authState.creds.registered) {
+    log.warn("PLEASE INPUT YOUR PHONR NUMBER")
     const pairingNumber = await getPairingNumber();
     
     setTimeout(async () => {
