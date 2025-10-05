@@ -1,38 +1,30 @@
-import { watchFile, unwatchFile } from 'fs'
-import { fileURLToPath } from 'url'
-import log from "#lib/logger.js"
+import { watchFile, unwatchFile } from 'fs';
+import { fileURLToPath } from 'url';
+import log from '#lib/logger.js';
 
-// Nomor pairing (untuk scan QR/Pairing code)
-global.PAIRING_NUMBER = 62882003353414
+global.PAIRING_NUMBER = 62882003353414;
 
-// Nomor owner utama + cadangan
-global.ownerNumber = [
+global.ownerNumber = Object.freeze([
   '62882003353414',
   '62882005514880'
-]
+]);
 
-// Mode bot: 
-// false  = self mode (hanya owner)
-// true = public (semua user)
-global.pubelik = true
+global.pubelik = true;
 
-// Pesan default untuk respon bot
+global.stickpack = 'Created By';
+global.stickauth = 'EternityBot';
+global.copyright = '© 2025 - VryptLabs';
+global.title = 'EternityBot';
+global.body = 'A lightweight and efficient WhatsApp bot built with Node.js and Baileys.';
+global.source = 'https://github.com/VryptLab/EternityBot';
+global.newsletter = '120363404886887749@newsletter';
 
-// Default watermark untuk stiker
-global.stickpack = 'Created By'
-global.stickauth = 'EternityBot'
+const BASE_URL = 'https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/';
+global.thumbnail = `${BASE_URL}banner.png`;
+global.logo = `${BASE_URL}new-logo.png`;
+global.icon = global.logo;
 
-global.copyright = "© 2025 - VryptLabs"
-
-global.title = "EternityBot"
-global.body = "A lightweight and efficient WhatsApp bot built with Node.js and Baileys."
-global.source = "https://github.com/VryptLab/EternityBot"
-global.newsletter = "120363404886887749@newsletter"
-global.thumbnail = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/banner.png"
-global.logo = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/new-logo.png"
-global.icon = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/new-logo.png"
-
-global.mess = {
+global.mess = Object.freeze({
   gagal: 'Gagal, harap lapor owner!',
   wait: 'Harap tunggu sebentar...',
   owner: 'Fitur ini hanya bisa digunakan oleh Owner.',
@@ -40,11 +32,24 @@ global.mess = {
   admin: 'Fitur ini hanya bisa digunakan oleh Admin Group.',
   botAdmin: 'Bot harus menjadi Admin terlebih dahulu.',
   private: 'Fitur ini hanya bisa digunakan di chat pribadi.'
-}
+});
 
-const file = fileURLToPath(import.meta.url)
-watchFile(file, () => {
-  unwatchFile(file)
-  log.info("berhasil relooad file config.")
-  import(`${file}?update=${Date.now()}`)
-})
+const file = fileURLToPath(import.meta.url);
+let isReloading = false;
+
+watchFile(file, async () => {
+  if (isReloading) return;
+  isReloading = true;
+  
+  unwatchFile(file);
+  log.info('Reloading config file...');
+  
+  try {
+    await import(`${file}?update=${Date.now()}`);
+    log.success('Config reloaded successfully');
+  } catch (error) {
+    log.error(`Failed to reload config: ${error.message}`);
+  } finally {
+    isReloading = false;
+  }
+});
