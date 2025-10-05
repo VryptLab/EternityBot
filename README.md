@@ -107,6 +107,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ---
 
 ## Acknowledgments
+- [*Vrypt Dev*](https://github.com/Vryptt) - maintainer
 - [Agos ygy](https://github.com/AgusXzz) - Code base
 - [Dika Ardnt](https://github.com/DikaArdnt) - Original work
 - [WhiskeySockets/Baileys](https://github.com/WhiskeySockets/Baileys) - WhatsApp Web API
