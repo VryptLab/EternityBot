@@ -60,6 +60,7 @@ const RECONNECT_STRATEGIES = Object.freeze({
 
 let reconnectAttempts = 0;
 let handlerModule = null;
+let isPrompting = false;
 
 const resetSession = async () => {
   try {
@@ -103,7 +104,9 @@ const fetchGroupMetadata = async (conn, groupId) => {
     groupMetadataCache.set(groupId, { data: metadata, timestamp: now });
     return metadata;
   } catch (err) {
-    log.error(`Failed to fetch group metadata for ${groupId}: ${err.message}`);
+    if (!isPrompting) {
+      log.error(`Failed to fetch group metadata for ${groupId}: ${err.message}`);
+    }
     return null;
   }
 };
@@ -112,6 +115,10 @@ const isValidGroupId = (id) => id && id !== 'status@broadcast' && id.endsWith('@
 
 const getPairingNumber = async () => {
   try {
+    isPrompting = true;
+    
+    console.log('\n');
+    
     const { phoneNumber } = await inquirer.prompt([
       {
         type: 'input',
@@ -124,22 +131,36 @@ const getPairingNumber = async () => {
           if (cleaned.length < 10 || cleaned.length > 15) return 'Panjang nomor tidak valid (10-15 digit)';
           return true;
         },
-        filter: (input) => input.replace(/\D/g, '')
+        filter: (input) => input.replace(/\D/g, ''),
+        prefix: '›'
       }
     ]);
     
+    isPrompting = false;
+    
+    console.log('\n');
+    
     return phoneNumber;
   } catch (err) {
+    isPrompting = false;
     log.error(err.isTtyError ? 'Terminal tidak mendukung prompt interaktif' : `Error: ${err.message}`);
     process.exit(1);
   }
+};
+
+const safeLog = {
+  info: (msg) => !isPrompting && log.info(msg),
+  warn: (msg) => !isPrompting && log.warn(msg),
+  error: (msg) => !isPrompting && log.error(msg),
+  success: (msg) => !isPrompting && log.success(msg),
+  fatal: (msg) => log.fatal(msg)
 };
 
 async function startWA() {
   const { state, saveCreds } = await useMultiFileAuthState('sessions');
   const { version, isLatest } = await fetchLatestBaileysVersion();
   
-  log.info(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
+  safeLog.info(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
 
   const conn = makeWASocket({
     auth: {
@@ -173,7 +194,7 @@ async function startWA() {
     
     setTimeout(async () => {
       try {
-        const code = await conn.requestPairingCode(pairingNumber, "ETERNITY");
+        const code = await conn.requestPairingCode(pairingNumber);
         log.info(`Pairing Code: ${code}`);
       } catch (err) {
         log.error(`Failed to get pairing code: ${err.message}`);
@@ -182,7 +203,7 @@ async function startWA() {
   }
 
   conn.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
-    if (connection) log.info(`Connection Status: ${connection}`);
+    if (connection) safeLog.info(`Connection Status: ${connection}`);
 
     if (connection === 'close') {
       const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
@@ -196,7 +217,7 @@ async function startWA() {
       try {
         await conn.insertAllGroup();
       } catch (err) {
-        log.error(`Failed to insert groups: ${err.message}`);
+        safeLog.error(`Failed to insert groups: ${err.message}`);
       }
     }
   });
@@ -228,13 +249,13 @@ async function startWA() {
       
       if (m.chat.endsWith('@broadcast') || m.type === 'protocolMessage' || m.isBot) return;
 
-      if (m.message) printMessage(m, conn);
+      if (m.message && !isPrompting) printMessage(m, conn);
 
       if (!handlerModule) handlerModule = await import('./handler.js');
       
       await handlerModule.default(conn, m);
     } catch (err) {
-      log.error(`Error processing message: ${err.message}`);
+      safeLog.error(`Error processing message: ${err.message}`);
     }
   });
 
@@ -247,12 +268,16 @@ startWA().catch(err => {
 });
 
 process.on('uncaughtException', (err) => {
-  log.error(`Uncaught Exception: ${err.message}`);
-  log.error(err.stack);
+  if (!isPrompting) {
+    log.error(`Uncaught Exception: ${err.message}`);
+    log.error(err.stack);
+  }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  log.error(`Unhandled Rejection at: ${promise}, Reason: ${reason}`);
+  if (!isPrompting) {
+    log.error(`Unhandled Rejection at: ${promise}, Reason: ${reason}`);
+  }
 });
 
 const cleanup = async () => {
