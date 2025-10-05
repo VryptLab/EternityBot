@@ -29,8 +29,8 @@ global.body = "A lightweight and efficient WhatsApp bot built with Node.js and B
 global.source = "https://github.com/VryptLab/EternityBot"
 global.newsletter = "120363404886887749@newsletter"
 global.thumbnail = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/banner.png"
-global.logo = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/logo.png"
-global.icon = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/black-logo.png"
+global.logo = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/new-logo.png"
+global.icon = "https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/new-logo.png"
 
 global.mess = {
   gagal: 'Gagal, harap lapor owner!',

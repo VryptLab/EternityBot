@@ -114,6 +114,7 @@ async function startWA() {
     countryCode: 'ID',
     maxMsgRetryCount: 3,
     retryRequestDelayMs: 3000,
+    syncFullHistory: false,
     msgRetryCounterCache,
     version
   });
@@ -180,7 +181,7 @@ async function startWA() {
 
     const m = await serialize(conn, msg);
     
-    if (m.chat.endsWith('@broadcast') || m.chat.endsWith('@newsletter')) return;
+    if (m.chat.endsWith('@broadcast')) return;
     
     if (m.type === 'protocolMessage' || m.isBot) return;
 
