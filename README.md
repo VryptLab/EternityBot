@@ -119,9 +119,6 @@ npm start
 Customize your bot by editing the `config.js` file:
 
 ```javascript
-// Authentication Setup
-global.PAIRING_NUMBER = 62882003353414
-
 // Owner Configuration
 global.ownerNumber = [
   '62882005514880',  // Primary owner

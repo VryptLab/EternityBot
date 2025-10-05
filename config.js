@@ -2,8 +2,6 @@ import { watchFile, unwatchFile } from 'fs';
 import { fileURLToPath } from 'url';
 import log from '#lib/logger.js';
 
-global.PAIRING_NUMBER = 62882003353414;
-
 global.ownerNumber = Object.freeze([
   '62882003353414',
   '62882005514880'
