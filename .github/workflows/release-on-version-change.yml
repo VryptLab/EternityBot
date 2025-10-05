@@ -1,0 +1,70 @@
+name: Create Tag and Release on Version Change
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get current version from package.json
+        id: current
+        run: echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+
+      - name: Fetch all tags
+        run: git fetch --tags
+
+      - name: Get latest tag
+        id: latest
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "latest_tag=$latest_tag" >> $GITHUB_OUTPUT
+
+      - name: Compare versions
+        id: compare
+        run: |
+          if [ "${{ steps.latest.outputs.latest_tag }}" != "v${{ steps.current.outputs.version }}" ]; then
+            echo "new_tag=v${{ steps.current.outputs.version }}" >> $GITHUB_OUTPUT
+            echo "should_tag=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_tag=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create new tag
+        if: steps.compare.outputs.should_tag == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.compare.outputs.new_tag }}
+          git push origin ${{ steps.compare.outputs.new_tag }}
+
+      - name: Create GitHub Release
+        if: steps.compare.outputs.should_tag == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.compare.outputs.new_tag }}
+          name: "Release ${{ steps.compare.outputs.new_tag }}"
+          body: |
+            🚀 **Stable Release**  
+            Version: `${{ steps.current.outputs.version }}`
+
+            ✅ Optimized and production-ready build.
+            🧩 Automatic release created from main branch.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Output result
+        run: |
+          if [ "${{ steps.compare.outputs.should_tag }}" = "true" ]; then
+            echo "✅ Created new release for tag ${{ steps.compare.outputs.new_tag }}"
+          else
+            echo "ℹ️ Version unchanged, no release created."
+          fi
