@@ -173,7 +173,7 @@ async function startWA() {
     
     setTimeout(async () => {
       try {
-        const code = await conn.requestPairingCode(pairingNumber);
+        const code = await conn.requestPairingCode(pairingNumber, "ETERNITY");
         log.info(`Pairing Code: ${code}`);
       } catch (err) {
         log.error(`Failed to get pairing code: ${err.message}`);
