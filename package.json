@@ -1,6 +1,6 @@
 {
   "name": "EternityBot",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A lightweight and efficient WhatsApp bot built with Node.js and Baileys.",
   "license": "MIT",
   "author": "VryptLabs",
