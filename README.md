@@ -1,12 +1,22 @@
 ![Banner](https://raw.githubusercontent.com/VryptLab/.github/refs/heads/main/banner.png)
 
 ![Node.js](https://img.shields.io/badge/Node.js-v20%2B-brightgreen?logo=nodedotjs)
+![NPM](https://img.shields.io/badge/npm-v10%2B-CB3837?logo=npm)
 ![License](https://img.shields.io/github/license/VryptLab/EternityBot)
 ![Stars](https://img.shields.io/github/stars/VryptLab/EternityBot?style=social)
+![Forks](https://img.shields.io/github/forks/VryptLab/EternityBot?style=social)
+![Issues](https://img.shields.io/github/issues/VryptLab/EternityBot)
+![Last Commit](https://img.shields.io/github/last-commit/VryptLab/EternityBot?logo=github)
+![Platform](https://img.shields.io/badge/Platform-Node.js%20%7C%20Baileys-blue)
+![Status](https://img.shields.io/badge/Status-Stable-success)
+![Made with Love](https://img.shields.io/badge/Made%20By-Vrypt-success)
+
+---
 
 # EternityBot
 
-A lightweight and efficient WhatsApp bot built with Node.js and Baileys.
+lightweight and efficient WhatsApp bot built with **Node.js** and **Baileys**.  
+Focused on performance, modularity, and simplicity — perfect for developers who want power without bloat.
 
 ---
 ## Requirements
@@ -103,4 +113,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-© 2025 VryptLabs
+_© 2025 VryptLabs_
