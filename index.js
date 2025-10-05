@@ -13,6 +13,7 @@ import NodeCache from '@cacheable/node-cache';
 import fs from 'fs/promises';
 import pino from 'pino';
 import cfonts from 'cfonts';
+import inquirer from 'inquirer';
 
 const storeLogger = pino({ level: 'fatal', stream: 'store' });
 const silentLogger = pino({ level: 'silent' });
@@ -28,13 +29,8 @@ const displayBanner = () => {
     space: true
   });
 
-  const terminalWidth = process.stdout.columns;
-  const centered = output.string
-    .split('\n')
-    .map(line => ' '.repeat(Math.max(0, (terminalWidth - line.length) >> 1)) + line)
-    .join('\n');
-
-  console.log(centered);
+  const w = process.stdout.columns;
+  console.log(output.string.split('\n').map(l => ' '.repeat(Math.max(0, (w - l.length) >> 1)) + l).join('\n'));
 };
 
 displayBanner();
@@ -50,21 +46,20 @@ global.plugins = loader.plugins;
 
 const msgRetryCounterCache = new NodeCache();
 const groupMetadataCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000;
-
+const CACHE_TTL = 300000;
+const MAX_RECONNECT = 5;
 const RECONNECT_STRATEGIES = Object.freeze({
-  408: { action: 'restart', delay: 2000, message: 'Connection timed out' },
-  503: { action: 'restart', delay: 3000, message: 'Service unavailable' },
-  428: { action: 'restart', delay: 2000, message: 'Connection closed' },
-  515: { action: 'restart', delay: 2000, message: 'Connection closed' },
-  401: { action: 'reset', delay: 1000, message: 'Session logged out' },
-  403: { action: 'reset', delay: 1000, message: 'Account banned' },
-  405: { action: 'reset', delay: 1000, message: 'Session not logged in' }
+  408: { action: 'restart', delay: 2000, msg: 'Connection timed out' },
+  503: { action: 'restart', delay: 3000, msg: 'Service unavailable' },
+  428: { action: 'restart', delay: 2000, msg: 'Connection closed' },
+  515: { action: 'restart', delay: 2000, msg: 'Connection closed' },
+  401: { action: 'reset', delay: 1000, msg: 'Session logged out' },
+  403: { action: 'reset', delay: 1000, msg: 'Account banned' },
+  405: { action: 'reset', delay: 1000, msg: 'Session not logged in' }
 });
 
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
-const EXPONENTIAL_BACKOFF = true;
+let handlerModule = null;
 
 const resetSession = async () => {
   try {
@@ -75,12 +70,6 @@ const resetSession = async () => {
   }
 };
 
-const calculateDelay = (baseDelay, attempt) => {
-  return EXPONENTIAL_BACKOFF 
-    ? baseDelay * Math.pow(2, attempt - 1)
-    : baseDelay * attempt;
-};
-
 const handleReconnect = async (statusCode) => {
   const strategy = RECONNECT_STRATEGIES[statusCode];
   
@@ -89,19 +78,15 @@ const handleReconnect = async (statusCode) => {
     process.exit(1);
   }
 
-  reconnectAttempts++;
-  
-  if (reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
+  if (++reconnectAttempts > MAX_RECONNECT) {
     log.fatal('Max reconnection attempts reached. Exiting...');
     process.exit(1);
   }
 
-  const delay = calculateDelay(strategy.delay, reconnectAttempts);
-  log.warn(`${strategy.message}. Reconnecting in ${delay}ms... (Attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+  const delay = strategy.delay * Math.pow(2, reconnectAttempts - 1);
+  log.warn(`${strategy.msg}. Reconnecting in ${delay}ms... (${reconnectAttempts}/${MAX_RECONNECT})`);
 
-  if (strategy.action === 'reset') {
-    await resetSession();
-  }
+  if (strategy.action === 'reset') await resetSession();
 
   await new Promise(resolve => setTimeout(resolve, delay));
   return startWA();
@@ -111,9 +96,7 @@ const fetchGroupMetadata = async (conn, groupId) => {
   const cached = groupMetadataCache.get(groupId);
   const now = Date.now();
 
-  if (cached && (now - cached.timestamp) < CACHE_TTL) {
-    return cached.data;
-  }
+  if (cached && (now - cached.timestamp) < CACHE_TTL) return cached.data;
 
   try {
     const metadata = await conn.groupMetadata(groupId);
@@ -126,6 +109,31 @@ const fetchGroupMetadata = async (conn, groupId) => {
 };
 
 const isValidGroupId = (id) => id && id !== 'status@broadcast' && id.endsWith('@g.us');
+
+const getPairingNumber = async () => {
+  try {
+    const { phoneNumber } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'phoneNumber',
+        message: 'Masukkan nomor WhatsApp (format: 62882xxxxxxxx):',
+        validate: (input) => {
+          const cleaned = input.replace(/\D/g, '');
+          if (!cleaned) return 'Nomor telepon tidak boleh kosong';
+          if (!cleaned.startsWith('62')) return 'Nomor harus diawali dengan 62';
+          if (cleaned.length < 10 || cleaned.length > 15) return 'Panjang nomor tidak valid (10-15 digit)';
+          return true;
+        },
+        filter: (input) => input.replace(/\D/g, '')
+      }
+    ]);
+    
+    return phoneNumber;
+  } catch (err) {
+    log.error(err.isTtyError ? 'Terminal tidak mendukung prompt interaktif' : `Error: ${err.message}`);
+    process.exit(1);
+  }
+};
 
 async function startWA() {
   const { state, saveCreds } = await useMultiFileAuthState('sessions');
@@ -147,12 +155,8 @@ async function startWA() {
     defaultQueryTimeoutMs: 60000,
     emitOwnEvents: false,
     fireInitQueries: true,
-    getMessage: async (key) => {
-      return { conversation: '' };
-    },
-    patchMessageBeforeSending: (message) => {
-      return message;
-    },
+    getMessage: async () => ({ conversation: '' }),
+    patchMessageBeforeSending: (msg) => msg,
     countryCode: 'ID',
     maxMsgRetryCount: 3,
     retryRequestDelayMs: 3000,
@@ -165,9 +169,11 @@ async function startWA() {
   conn.chats ??= {};
 
   if (!conn.authState.creds.registered) {
+    const pairingNumber = await getPairingNumber();
+    
     setTimeout(async () => {
       try {
-        const code = await conn.requestPairingCode(PAIRING_NUMBER);
+        const code = await conn.requestPairingCode(pairingNumber);
         log.info(`Pairing Code: ${code}`);
       } catch (err) {
         log.error(`Failed to get pairing code: ${err.message}`);
@@ -199,25 +205,19 @@ async function startWA() {
 
   conn.ev.on('group-participants.update', async ({ id }) => {
     if (!isValidGroupId(id)) return;
-    
     const metadata = await fetchGroupMetadata(conn, id);
     if (metadata) conn.chats[id] = metadata;
   });
   
   conn.ev.on('groups.update', async (updates) => {
     const validGroups = updates.filter(({ id }) => isValidGroupId(id));
-    
-    if (validGroups.length === 0) return;
+    if (!validGroups.length) return;
 
-    const promises = validGroups.map(async ({ id }) => {
+    await Promise.allSettled(validGroups.map(async ({ id }) => {
       const metadata = await fetchGroupMetadata(conn, id);
       if (metadata) conn.chats[id] = metadata;
-    });
-
-    await Promise.allSettled(promises);
+    }));
   });
-
-  let handlerModule = null;
   
   conn.ev.on('messages.upsert', async ({ messages }) => {
     const msg = messages[0];
@@ -226,15 +226,11 @@ async function startWA() {
     try {
       const m = await serialize(conn, msg);
       
-      if (m.chat.endsWith('@broadcast') || 
-          m.type === 'protocolMessage' || 
-          m.isBot) return;
+      if (m.chat.endsWith('@broadcast') || m.type === 'protocolMessage' || m.isBot) return;
 
       if (m.message) printMessage(m, conn);
 
-      if (!handlerModule) {
-        handlerModule = await import('./handler.js');
-      }
+      if (!handlerModule) handlerModule = await import('./handler.js');
       
       await handlerModule.default(conn, m);
     } catch (err) {
@@ -256,18 +252,14 @@ process.on('uncaughtException', (err) => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  log.error(`Unhandled Rejection at: ${promise}`);
-  log.error(`Reason: ${reason}`);
+  log.error(`Unhandled Rejection at: ${promise}, Reason: ${reason}`);
 });
 
-process.on('SIGINT', async () => {
+const cleanup = async () => {
   log.info('Shutting down gracefully...');
   groupMetadataCache.clear();
   process.exit(0);
-});
+};
 
-process.on('SIGTERM', async () => {
-  log.info('Shutting down gracefully...');
-  groupMetadataCache.clear();
-  process.exit(0);
-});
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
