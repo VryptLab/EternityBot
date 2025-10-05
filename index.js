@@ -110,7 +110,7 @@ async function startWA() {
     markOnlineOnConnect: false,
     generateHighQualityLinkPreview: true,
     connectTimeoutMs: 60000,
-    keepAliveIntervalMs: 5000,
+    keepAliveIntervalMs: 3000,
     countryCode: 'ID',
     maxMsgRetryCount: 3,
     retryRequestDelayMs: 3000,
