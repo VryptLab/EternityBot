@@ -19,6 +19,19 @@ lightweight and efficient WhatsApp bot built with **Node.js** and **Baileys**.
 Focused on performance, modularity, and simplicity — perfect for developers who want power without bloat.
 
 ---
+
+## Sponsor
+
+🚀 **Need Affordable Hosting?**  
+Deploy your bot with reliable and budget-friendly hosting services:
+
+[![Athars Tech](https://img.shields.io/badge/Hosting-Athars.tech-blue?style=for-the-badge&logo=server)](https://athars.tech)
+
+💬 **Contact Customer Service:**  
+[WhatsApp CS](https://wa.me/message/LMBASWSPPRJNI1) for instant support and inquiries.
+
+---
+
 ## Requirements
 
 - Node.js v20 or higher
@@ -27,6 +40,7 @@ Focused on performance, modularity, and simplicity — perfect for developers wh
 - RAM: Minimum 2GB (4GB+ recommended)
 - Disk Space: Minimum 500MB free
 - Internet connection for package installation and updates
+
 ---
 
 ## Installation
