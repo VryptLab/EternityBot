@@ -13,12 +13,14 @@ const groupMetadataCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
 
 const initOwnerCache = () => {
-  ownerNumber.forEach(num => ownerCache.add(num));
+  if (ownerCache.size === 0) {
+    ownerNumber.forEach(num => ownerCache.add(num));
+  }
 };
 
 const isOwnerUser = (sender, fromMe) => {
   if (fromMe) return true;
-  if (ownerCache.size === 0) initOwnerCache();
+  initOwnerCache();
   return ownerCache.has(sender.split('@')[0]);
 };
 
@@ -33,6 +35,12 @@ const getCachedGroupMetadata = async (conn, chatId) => {
   try {
     const metadata = conn.chats[chatId] || await conn.groupMetadata(chatId);
     groupMetadataCache.set(chatId, { data: metadata, timestamp: now });
+    
+    if (groupMetadataCache.size > 100) {
+      const oldestKey = groupMetadataCache.keys().next().value;
+      groupMetadataCache.delete(oldestKey);
+    }
+    
     return metadata;
   } catch {
     return null;
@@ -50,14 +58,12 @@ export default async function Command(conn, m) {
   if (!pubelik && !isOwner) return;
 
   const quoted = m.isQuoted ? m.quoted : m;
-  const isCommand = m.prefix && m.body?.startsWith(m.prefix);
+  const body = m.body;
+  const firstChar = body?.[0];
 
-  if (isOwner && m.body) {
-    const firstChar = m.body[0];
-    const secondChar = m.body[1];
-    
+  if (isOwner && body) {
     if (firstChar === '>') {
-      return handleEval(m, secondChar === '=');
+      return handleEval(m, conn, body[1] === '=');
     }
     
     if (firstChar === '$') {
@@ -65,49 +71,37 @@ export default async function Command(conn, m) {
     }
   }
 
-  let metadata, isAdmin, isBotAdmin, groupDataLoaded = false;
+  const isCommand = m.prefix && body?.startsWith(m.prefix);
+  if (!isCommand) {
+    return handlePluginEvents(conn, m, quoted, isOwner);
+  }
 
-  const loadGroupData = async () => {
-    if (groupDataLoaded || !m.isGroup) return;
-    
-    metadata = await getCachedGroupMetadata(conn, m.chat);
-    if (!metadata) return;
+  const command = m.command?.toLowerCase();
+  if (!command) return;
 
-    const botJid = jidNormalizedUser(conn.user.id);
-    isAdmin = getParticipantRole(metadata.participants, m.sender);
-    isBotAdmin = getParticipantRole(metadata.participants, botJid);
-    groupDataLoaded = true;
-  };
+  await handlePluginCommand(conn, m, quoted, isOwner, command);
+}
 
-  const ctx = {
-    Api,
-    Func,
-    downloadM: (filename) => conn.downloadMediaMessage(quoted, filename),
-    quoted,
-    get metadata() { return metadata; },
-    get isAdmin() { return isAdmin; },
-    get isBotAdmin() { return isBotAdmin; },
-    isOwner
-  };
-
+async function handlePluginEvents(conn, m, quoted, isOwner) {
+  const ctx = createContext(conn, m, quoted, isOwner);
   const pluginValues = Object.values(plugins);
   
-  for (let i = 0; i < pluginValues.length; i++) {
-    const plugin = pluginValues[i];
-    
+  for (const plugin of pluginValues) {
     if (typeof plugin.on === 'function') {
       try {
-        if (await plugin.on.call(conn, m, ctx)) continue;
+        if (await plugin.on.call(conn, m, ctx)) return;
       } catch (e) {
         console.error(`[PLUGIN EVENT ERROR] ${plugin.name}:`, e.message);
       }
     }
+  }
+}
 
-    if (!isCommand) continue;
-
-    const command = m.command?.toLowerCase();
-    if (!command) continue;
-
+async function handlePluginCommand(conn, m, quoted, isOwner, command) {
+  let metadata, isAdmin, isBotAdmin;
+  const pluginValues = Object.values(plugins);
+  
+  for (const plugin of pluginValues) {
     const isCmd = plugin.command?.includes(command) || plugin.alias?.includes(command);
     if (!isCmd) continue;
 
@@ -127,7 +121,14 @@ export default async function Command(conn, m) {
       }
       
       if (settings.admin || settings.botAdmin) {
-        await loadGroupData();
+        if (!metadata) {
+          metadata = await getCachedGroupMetadata(conn, m.chat);
+          if (metadata) {
+            const botJid = jidNormalizedUser(conn.user.id);
+            isAdmin = getParticipantRole(metadata.participants, m.sender);
+            isBotAdmin = getParticipantRole(metadata.participants, botJid);
+          }
+        }
         
         if (settings.admin && !isAdmin) {
           return m.reply(mess.admin);
@@ -140,6 +141,7 @@ export default async function Command(conn, m) {
 
       if (settings.loading) m.reply(mess.wait);
       
+      const ctx = createContext(conn, m, quoted, isOwner, metadata, isAdmin, isBotAdmin);
       await plugin.run(conn, m, ctx);
       return;
     } catch (e) {
@@ -149,11 +151,24 @@ export default async function Command(conn, m) {
   }
 }
 
-async function handleEval(m, isAsync) {
+function createContext(conn, m, quoted, isOwner, metadata = null, isAdmin = false, isBotAdmin = false) {
+  return {
+    Api,
+    Func,
+    downloadM: (filename) => conn.downloadMediaMessage(quoted, filename),
+    quoted,
+    metadata,
+    isAdmin,
+    isBotAdmin,
+    isOwner
+  };
+}
+
+async function handleEval(m, conn, isAsync) {
+  const code = m.text;
   let evalCmd;
   
   try {
-    const code = m.text.slice(isAsync ? 2 : 1).trim();
     evalCmd = isAsync || /await/i.test(code)
       ? eval(`(async() => { ${code} })()`)
       : eval(code);
@@ -173,7 +188,7 @@ async function handleExec(m) {
   const cmd = m.text.slice(1).trim();
   
   try {
-    const { stdout = '', stderr = '' } = await exec(cmd);
+    const { stdout = '', stderr = '' } = await exec(cmd, { timeout: 60000 });
     const output = stdout.trim() || stderr.trim() || 'No output';
     m.reply(output);
   } catch (e) {
