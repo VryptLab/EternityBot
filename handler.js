@@ -158,6 +158,7 @@ function createContext(conn, m, quoted, isOwner, metadata = null, isAdmin = fals
     downloadM: (filename) => conn.downloadMediaMessage(quoted, filename),
     quoted,
     metadata,
+    text: m.text,
     isAdmin,
     isBotAdmin,
     isOwner
