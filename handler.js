@@ -9,8 +9,6 @@ import Func from '#lib/function.js';
 const exec = util.promisify(cp.exec).bind(cp);
 
 const ownerCache = new Set();
-const groupMetadataCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000;
 
 const initOwnerCache = () => {
   if (ownerCache.size === 0) {
@@ -24,27 +22,8 @@ const isOwnerUser = (sender, fromMe) => {
   return ownerCache.has(sender.split('@')[0]);
 };
 
-const getCachedGroupMetadata = async (conn, chatId) => {
-  const cached = groupMetadataCache.get(chatId);
-  const now = Date.now();
-
-  if (cached && (now - cached.timestamp) < CACHE_TTL) {
-    return cached.data;
-  }
-
-  try {
-    const metadata = conn.chats[chatId] || await conn.groupMetadata(chatId);
-    groupMetadataCache.set(chatId, { data: metadata, timestamp: now });
-    
-    if (groupMetadataCache.size > 100) {
-      const oldestKey = groupMetadataCache.keys().next().value;
-      groupMetadataCache.delete(oldestKey);
-    }
-    
-    return metadata;
-  } catch {
-    return null;
-  }
+const getGroupMetadata = (conn, chatId) => {
+  return conn.chats?.[chatId] || null;
 };
 
 const getParticipantRole = (participants, jid) => {
@@ -122,7 +101,17 @@ async function handlePluginCommand(conn, m, quoted, isOwner, command) {
       
       if (settings.admin || settings.botAdmin) {
         if (!metadata) {
-          metadata = await getCachedGroupMetadata(conn, m.chat);
+          metadata = getGroupMetadata(conn, m.chat);
+          
+          if (!metadata && m.isGroup) {
+            try {
+              metadata = await conn.groupMetadata(m.chat);
+              if (metadata) conn.chats[m.chat] = metadata;
+            } catch (e) {
+              console.error(`[METADATA ERROR] ${m.chat}:`, e.message);
+            }
+          }
+          
           if (metadata) {
             const botJid = jidNormalizedUser(conn.user.id);
             isAdmin = getParticipantRole(metadata.participants, m.sender);
