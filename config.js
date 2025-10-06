@@ -3,8 +3,8 @@ import { fileURLToPath } from 'url';
 import log from '#lib/logger.js';
 
 global.ownerNumber = Object.freeze([
-  '62882003353414',
-  '62882005514880'
+  '62882005514880',
+  '62882003353414'
 ]);
 
 global.pubelik = true;
