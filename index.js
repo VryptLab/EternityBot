@@ -25,7 +25,7 @@ const RECONNECT_STRATEGIES = Object.freeze({
   408: { action: 'restart', delay: 2000, msg: 'Connection timed out' },
   503: { action: 'restart', delay: 3000, msg: 'Service unavailable' },
   428: { action: 'restart', delay: 2000, msg: 'Connection closed' },
-  500: { action: 'restart', delay: 2000, msg: 'server Error, restart',
+  500: { action: 'restart', delay: 2000, msg: 'server Error, restart' },
   515: { action: 'restart', delay: 2000, msg: 'Connection closed' },
   401: { action: 'reset', delay: 1000, msg: 'Session logged out' },
   403: { action: 'reset', delay: 1000, msg: 'Account banned' },
